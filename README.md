@@ -98,9 +98,9 @@ Frontend – https://my-feeds-web.vercel.app  (fetches the URL above)
 
 ## Connecting the front-end to the API
 
-The UI can reach the FastAPI service in **two interchangeable ways**. Pick the one you like and stick to it.
+We implement the FastAPI service by copying the backend api deployment url into frontend's vercel project's environment variable
 
-### 1  Absolute URL via environment variable (simplest)
+### Absolute URL via environment variable
 
 ```
 frontend/app/page.tsx
@@ -113,53 +113,8 @@ const res = await fetch(`${process.env.FEEDS_API_URL}/api/latest`)
   ```
 * **Vercel Preview / Production**  (Project → Settings → Environment Variables)
   ```
-  FEEDS_API_URL=https://api.brandonpai.com        # or your *.vercel.app alias
+  FEEDS_API_URL=https://backend-chi-kangs-projects.vercel.app/     # Added at Vercel Deployment, Environment Variables.
   ```
 No extra config files are needed. When you promote a new backend build the
-alias (`api.brandonpai.com`) keeps pointing at the latest deployment, so
+alias, keeps pointing at the latest deployment, so
 no code change is required.
-
-### 2  Relative URL + rewrite (hides the domain)
-
-```
-frontend/app/page.tsx
-const res = await fetch('/api/latest')      // ← same-origin call
-```
-
-Add a single rewrite so only production traffic is forwarded:
-
-```jsonc
-// frontend/vercel.json
-{
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "https://api.brandonpai.com/api/$1"
-    }
-  ]
-}
-```
-
-Local dev still works because `vercel dev` does **not** apply rewrites; the browser simply calls
-`http://localhost:3000/api/latest` which you map to the local backend
-with `FEEDS_API_URL` (see option 1).
-
-> **Tip – switching later**
-> If you start with one pattern and later prefer the other, only one
-> change is necessary (either remove the rewrite file or stop using
-> `FEEDS_API_URL`). The runtime code never needs to change.
-
-### URL cheat-sheet
-
-| Environment | Front-end URL                                   | API URL it reaches                            |
-|-------------|-------------------------------------------------|-----------------------------------------------|
-| Local dev   | `http://localhost:3000/api/latest`              | `http://localhost:8000/api/latest`            |
-| Vercel prod | `https://brandonpai.com/api/latest` *(if using rewrite)* | `https://api.brandonpai.com/api/latest` |
-| Vercel prod | direct fetch with env var                       | `https://api.brandonpai.com/api/latest`       |
-
-Now the front-end will always display fresh articles whether you're on
-localhost or on your custom domain.
-
----
-
-Happy coding! 
