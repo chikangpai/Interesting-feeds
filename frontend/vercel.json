@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://my-feeds-api.vercel.app/api/$1"
+    }
+  ]
+} 
