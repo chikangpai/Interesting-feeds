@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://my-feeds-api.vercel.app/api/$1"
+      "destination": "https://backend-ir8gtvken-chi-kangs-projects.vercel.app/api/$1"
     }
   ]
 } 
