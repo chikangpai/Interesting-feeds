@@ -10,12 +10,19 @@ interface FeedItem {
 
 export default async function Home() {
   const baseUrl = process.env.FEEDS_API_URL || "http://localhost:8000";
-  const res = await fetch(`${baseUrl}/api/latest`, { next: { revalidate: 300 } });
+  const endpoint = `${baseUrl}/api/latest`;
+  // Log on the server console which endpoint we're hitting
+  // and expose it in the UI (dev only) so you can confirm it points to :8000
+  console.log("Fetching feed from", endpoint);
+  const res = await fetch(endpoint, { cache: "no-store" });
   
   if (!res.ok) {
     return (
       <main className="max-w-2xl mx-auto p-6">
         <h1 className="text-3xl font-bold mb-4">CK&apos;s Curated Feed</h1>
+        {process.env.NODE_ENV !== "production" && (
+          <p className="text-xs text-gray-400 mb-4">Debug: fetching from {endpoint}</p>
+        )}
         <p className="text-red-500">Failed to fetch articles. Make sure the backend API is running.</p>
       </main>
     )
@@ -26,6 +33,9 @@ export default async function Home() {
   return (
     <main className="max-w-2xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-4">CK&apos;s Curated Feed</h1>
+      {process.env.NODE_ENV !== "production" && (
+        <p className="text-xs text-gray-400 mb-4">Debug: fetching from {endpoint}</p>
+      )}
       <ul className="space-y-6">
         {items.map((it) => (
           <li key={it.link} className="border-l-4 pl-4">
