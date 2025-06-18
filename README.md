@@ -37,7 +37,9 @@ To run the stack you have **two options**. The first one mirrors the
 exact Vercel production layout (recommended). The second one is the
 classic Uvicorn + Next.js combo.
 
-### 1. Vercel-style local dev (recommended)
+### 1. Vercel-style local dev (recommended, but currently under some error)
+#### We should be able to use vercel dev, but we have some unexpected problems now. **
+Specifically, the problem is that for backend we some how can only expose api to 8000, instead of 8000/api/latest, so the frontend cannot get the api properly. Will fix this soon. 
 
 This relies on the Vercel CLI so you see the same behaviour locally and
 in the cloud.
@@ -66,7 +68,8 @@ cd backend && uvicorn api.index:app --reload --port 8000
 # Terminal 2 – frontend
 cd frontend && npm run dev       # defaults to http://localhost:3000
 ```
-We could also use vercel dev, but may have some unexpected problems now.
+
+
 
 ### Environment variables
 
