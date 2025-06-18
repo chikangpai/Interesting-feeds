@@ -1,0 +1,37 @@
+name: Refresh RSS feeds
+
+on:
+  schedule:
+    - cron:  '*/30 * * * *'   # every 30 min UTC
+  workflow_dispatch:          # allow manual trigger
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: pip install -r backend/requirements.txt
+
+      - name: Rebuild content.db
+        run: |
+          cd backend
+          python clean_db.py --nuke
+          python feeder.py
+
+      - name: Commit & push if db changed
+        run: |
+          git config user.name  "Feed-Bot"
+          git config user.email "actions@github.com"
+          git add backend/content.db
+          if git diff --cached --quiet; then
+            echo "No new items."
+          else
+            git commit -m "chore: refresh feeds ($(date -u '+%Y-%m-%d %H:%M'))"
+            git push
+          fi
