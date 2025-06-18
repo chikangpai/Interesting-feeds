@@ -66,6 +66,7 @@ cd backend && uvicorn api.index:app --reload --port 8000
 # Terminal 2 – frontend
 cd frontend && npm run dev       # defaults to http://localhost:3000
 ```
+We could also use vercel dev, but may have some unexpected problems now.
 
 ### Environment variables
 
