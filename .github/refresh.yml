@@ -2,7 +2,7 @@ name: Refresh RSS feeds
 
 on:
   schedule:
-    - cron:  '*/30 * * * *'   # every 30 min UTC
+    - cron:  '0 0 * * *'   # every 7 days UTC
   workflow_dispatch:          # allow manual trigger
 
 jobs:
