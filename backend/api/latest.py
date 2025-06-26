@@ -1,12 +1,14 @@
 import os, sqlite3, random
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 from typing import Optional
 
 # Shared feed utilities
 from feeds import refresh_feeds
+from local_files import refresh_local_files, get_file_by_hash
 
 app = FastAPI(root_path="/api/latest")
 
@@ -23,6 +25,7 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "..", "content.db")
 # refresh_feeds imported from feeds module; we'll wrap a convenience lambda with DB_PATH applied.
 def _refresh_feeds_wrapper():
     refresh_feeds(DB_PATH)
+    refresh_local_files(DB_PATH)
 
 # ---------------------------------------------------------------------------
 # FastAPI startup/shutdown hooks to keep the scheduler alive
@@ -72,6 +75,48 @@ def latest(limit: int = 300, per_source: int = 20, refresh: bool = False):
     # Trim the shuffled list to `limit` if that constraint is still desired.
     return items[:limit] if limit else items
 
+# File serving endpoint
+@app.get("/files/{file_hash}")
+def serve_file(file_hash: str):
+    """Serve local files by hash"""
+    file_path, file_type = get_file_by_hash(DB_PATH, file_hash)
+    
+    if not file_path or not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Determine media type
+    import mimetypes
+    media_type = mimetypes.guess_type(file_path)[0]
+    if not media_type:
+        if file_type == '.pdf':
+            media_type = 'application/pdf'
+        elif file_type == '.epub':
+            media_type = 'application/epub+zip'
+        else:
+            media_type = 'application/octet-stream'
+    
+    # Extract filename for download
+    filename = os.path.basename(file_path)
+    
+    # For EPUB files, serve them inline so browser can try to handle or pass to system
+    if file_type == '.epub':
+        return FileResponse(
+            file_path, 
+            media_type='application/epub+zip',
+            headers={
+                "Content-Disposition": f"inline; filename=\"{filename}\"",
+                "Content-Type": "application/epub+zip"
+            }
+        )
+    
+    return FileResponse(
+        file_path, 
+        media_type=media_type,
+        headers={
+            "Content-Disposition": f"inline; filename=\"{filename}\""
+        }
+    )
+
 # When running locally (e.g. via `vercel dev` or `uvicorn`), expose the same
 # handler under the full production path so the frontend can always request
 # `<host>/api/latest`.
@@ -79,3 +124,4 @@ def latest(limit: int = 300, per_source: int = 20, refresh: bool = False):
 # prefixes the function with "/api/latest".
 app.add_api_route("/api/latest", latest, methods=["GET"])
 app.add_api_route("/api/latest/{limit}", latest, methods=["GET"])
+app.add_api_route("/api/files/{file_hash}", serve_file, methods=["GET"])

@@ -30,8 +30,8 @@ FEEDS: dict[str, str] = {
     "paul_graham":   "https://filipesilva.github.io/paulgraham-rss/feed.rss",
     "sam+altman":     "http://blog.samaltman.com/posts.atom",
     "sheracaolity":  "https://sheracaolity.ghost.io/rss/",
-    "nature":        "https://www.nature.com/nature.rss",
-    "science":       "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=science",
+    # "nature":        "https://www.nature.com/nature.rss",
+    # "science":       "https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=science",
     #"wip_notes":     "https://notes.worksinprogress.co/feed",
     #"arxiv_ai":      "http://export.arxiv.org/rss/cs.AI",
     "trenton_bricken":      "https://www.trentonbricken.com/index.xml",
@@ -138,4 +138,12 @@ if __name__ == "__main__":
     ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
     DB_PATH = os.path.join(ROOT_DIR, "content.db")
     refresh_feeds(DB_PATH)
+    
+    # Also refresh local files
+    try:
+        from local_files import refresh_local_files
+        refresh_local_files(DB_PATH)
+    except ImportError:
+        print("⚠️  local_files module not available")
+    
     print("✅ Feeds refreshed →", DB_PATH) 

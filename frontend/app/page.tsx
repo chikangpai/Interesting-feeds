@@ -8,6 +8,19 @@ interface FeedItem {
   summary: string;
 }
 
+function formatLinkForDisplay(link: string, source: string, baseUrl: string): string {
+  // Handle Books specifically - link to Readwise Reader
+  if (source === 'Books(local file)') {
+    return 'https://read.readwise.io/new';
+  }
+  
+  // Handle other local files - convert API path to full URL
+  if (source.includes('(local file)') && link.startsWith('/api/files/')) {
+    return `${baseUrl}${link}`;
+  }
+  return link;
+}
+
 export default async function Home() {
   const baseUrl = process.env.FEEDS_API_URL || "http://localhost:8000";
   const endpoint = `${baseUrl}/api/latest`;
@@ -37,17 +50,27 @@ export default async function Home() {
         <p className="text-xs text-gray-400 mb-4">Debug: fetching from {endpoint}</p>
       )}
       <ul className="space-y-6">
-        {items.map((it) => (
-          <li key={it.link} className="border-l-4 pl-4">
-            <a href={it.link} className="text-xl font-semibold hover:underline" target="_blank" rel="noopener noreferrer">
-              {it.title}
-            </a>
-            <p className="text-sm text-gray-500">
-              {new Date(it.published).toLocaleString()} — {it.source}
-            </p>
-            <p>{it.summary}</p>
-          </li>
-        ))}
+        {items.map((it) => {
+          const displayLink = formatLinkForDisplay(it.link, it.source, baseUrl);
+          const isLocalFile = it.source.includes('(local file)');
+          
+          return (
+            <li key={it.link} className={`border-l-4 pl-4 ${isLocalFile ? 'border-blue-400 bg-blue-50' : ''}`}>
+              <a 
+                href={displayLink} 
+                className="text-xl font-semibold hover:underline" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                {isLocalFile ? '📄 ' : ''}{it.title}
+              </a>
+              <p className="text-sm text-gray-500">
+                {new Date(it.published).toLocaleString()} — {it.source}
+              </p>
+              <p>{it.summary}</p>
+            </li>
+          );
+        })}
       </ul>
     </main>
   );
